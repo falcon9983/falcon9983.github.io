@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>muchitina推特-账号动态与内容追踪</title>
+<meta name="description" content="muchitina推特是围绕该账号社交动态整理的内容档案页，汇集推文更新节点、发布内容分类、互动数据观察与账号相关讨论，帮助读者按时间线核对每条动态的发布背景与信息来源。">
+<meta name="keywords" content="muchitina推特">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d3557'/%3E%3Cpath d='M18 44V20h9l10 14V20h9v24h-9L27 30v14z' fill='%23f4a261'/%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#15202b;
+  --ink-soft:#3d4c5c;
+  --muted:#68798b;
+  --paper:#f7f8fa;
+  --card:#ffffff;
+  --line:#dde3ea;
+  --brand:#1d3557;
+  --brand-2:#274b78;
+  --accent:#e76f51;
+  --accent-soft:#fdf0eb;
+  --teal:#2a9d8f;
+  --teal-soft:#e8f5f3;
+  --amber:#f4a261;
+  --radius:14px;
+  --radius-sm:9px;
+  --shadow:0 2px 10px rgba(21,32,43,.07);
+  --shadow-lift:0 6px 22px rgba(21,32,43,.12);
+  --gap:22px;
+  --font:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,-apple-system,sans-serif;
+  --ann-h:44px;
+  --head-h:64px;
+  --stick:calc(var(--ann-h) + var(--head-h));
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--stick) + 14px)}
+body{
+  margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);
+  line-height:1.78;font-size:16px;-webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+a{color:var(--brand-2);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,h4{margin:0;line-height:1.35;font-weight:700}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:1.25em}
+li{margin:4px 0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ---------- 公告条 ---------- */
+.announce{
+  position:sticky;top:0;z-index:60;height:var(--ann-h);
+  background:var(--brand);color:#e8eef6;font-size:13.5px;
+  display:flex;align-items:center;
+}
+.announce .wrap{display:flex;align-items:center;gap:10px;width:100%;overflow:hidden}
+.announce b{color:var(--amber);font-weight:700;white-space:nowrap}
+.announce .ann-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.announce .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex:none;animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---------- 页头 ---------- */
+.head{
+  position:sticky;top:var(--ann-h);z-index:55;height:var(--head-h);
+  background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.head .wrap{display:flex;align-items:center;gap:18px;height:100%}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;color:var(--ink);letter-spacing:.2px}
+.brand:hover{text-decoration:none}
+.brand svg{flex:none}
+.nav{display:flex;align-items:center;gap:4px;margin-left:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{
+  padding:7px 11px;border-radius:8px;font-size:14.5px;color:var(--ink-soft);white-space:nowrap;
+  transition:background .18s,color .18s;
+}
+.nav a:hover{background:var(--accent-soft);color:var(--brand);text-decoration:none}
+.head-tools{display:flex;align-items:center;gap:10px;margin-left:auto}
+.search{position:relative;display:flex;align-items:center}
+.search input{
+  width:190px;padding:8px 12px 8px 32px;border:1px solid var(--line);border-radius:20px;
+  font:inherit;font-size:13.5px;background:var(--paper);color:var(--ink);transition:border-color .2s,width .2s;
+}
+.search input:focus{outline:none;border-color:var(--brand-2);background:#fff;width:220px}
+.search .ico{position:absolute;left:10px;pointer-events:none;opacity:.5}
+.search-result{
+  position:absolute;top:calc(100% + 8px);right:0;width:270px;background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow-lift);padding:8px;font-size:13.5px;display:none;z-index:70;
+}
+.search-result.on{display:block}
+.search-result a{display:block;padding:7px 9px;border-radius:6px;color:var(--ink)}
+.search-result a:hover{background:var(--paper);text-decoration:none}
+.search-result .empty{color:var(--muted);padding:8px 9px}
+.menu-btn{
+  display:none;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--line);
+  background:#fff;border-radius:10px;cursor:pointer;
+}
+.menu-btn svg{pointer-events:none}
+.mobile-nav{display:none}
+
+/* ---------- 首屏 ---------- */
+.hero{
+  position:relative;overflow:hidden;color:#eef4fb;
+  background:
+    radial-gradient(900px 380px at 88% -10%,rgba(244,162,97,.22),transparent 60%),
+    radial-gradient(700px 420px at 8% 110%,rgba(42,157,143,.24),transparent 62%),
+    linear-gradient(155deg,#16273b 0%,#1d3557 52%,#22406a 100%);
+}
+.hero .wrap{
+  display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:center;
+  padding-top:54px;padding-bottom:54px;position:relative;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.5px;
+  background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.22);
+  padding:5px 12px;border-radius:20px;color:#ffe3d2;margin-bottom:16px;
+}
+.hero h1{font-size:clamp(30px,4.4vw,46px);letter-spacing:.5px;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--amber)}
+.hero p.lead{color:#c7d6e6;font-size:16px;max-width:38em;margin-bottom:22px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;font-weight:600;
+  font-size:15px;transition:transform .18s,background .18s,box-shadow .18s;border:1px solid transparent;
+}
+.btn:hover{text-decoration:none;transform:translateY(-2px)}
+.btn-primary{background:var(--amber);color:#3b2008;box-shadow:0 4px 14px rgba(244,162,97,.32)}
+.btn-ghost{background:rgba(255,255,255,.08);color:#eaf2fb;border-color:rgba(255,255,255,.26)}
+.hero-stats{display:flex;gap:26px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.16);padding-top:16px}
+.hero-stats div{font-size:13px;color:#a9bdd3}
+.hero-stats b{display:block;font-size:22px;color:#fff;font-weight:800;letter-spacing:.5px}
+.hero-art{position:relative;min-height:300px}
+.hero-art svg{width:100%;height:auto}
+.hero-badge{
+  position:absolute;background:#fff;color:var(--ink);border-radius:12px;padding:10px 13px;
+  box-shadow:var(--shadow-lift);font-size:12.5px;line-height:1.5;max-width:196px;
+}
+.hero-badge b{display:block;font-size:13.5px;color:var(--brand)}
+.hb1{top:6px;right:4px}
+.hb2{bottom:10px;left:-6px}
+@media (max-width:860px){
+  .hero .wrap{grid-template-columns:1fr;gap:24px}
+  .hero-art{min-height:250px;order:-1}
+  .hb2{left:auto;right:0;bottom:-6px}
+}
+
+/* ---------- 主布局 ---------- */
+.main{padding:38px 0 10px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--gap);align-items:start}
+.content{min-width:0}
+section[id]{scroll-margin-top:calc(var(--stick) + 14px)}
+.sec{margin-bottom:40px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.sec-head h2{font-size:22px;letter-spacing:.2px;position:relative;padding-left:14px}
+.sec-head h2::before{
+  content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:5px;height:19px;border-radius:3px;background:var(--accent);
+}
+.sec-head .sub{font-size:13px;color:var(--muted)}
+.more-link{font-size:13.5px;font-weight:600;color:var(--brand-2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+/* 概览 */
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ov-cell{padding:16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);transition:transform .18s,box-shadow .18s}
+.ov-cell:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
+.ov-cell .k{font-size:26px;font-weight:800;color:var(--brand);letter-spacing:.5px}
+.ov-cell .k small{font-size:13px;font-weight:600;color:var(--muted);margin-left:2px}
+.ov-cell h3{font-size:14.5px;margin:6px 0 4px;color:var(--ink)}
+.ov-cell p{font-size:13px;color:var(--muted);margin:0;line-height:1.65}
+
+/* 精选卡片 */
+.pick-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.pick-hero{overflow:hidden;display:flex;flex-direction:column}
+.pick-hero img{width:100%;height:200px;object-fit:cover}
+.pick-hero .body{padding:16px 18px}
+.pick-hero h3{font-size:18px;margin-bottom:8px}
+.pick-hero p{font-size:14px;color:var(--ink-soft);margin-bottom:10px}
+.meta{font-size:12.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;background:var(--teal-soft);color:#1c6f66;font-weight:600}
+.tag.warm{background:var(--accent-soft);color:#b1472a}
+.pick-list{display:flex;flex-direction:column;gap:12px}
+.pick-item{display:flex;gap:12px;padding:12px;align-items:flex-start;transition:transform .18s,box-shadow .18s}
+.pick-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+.pick-item img{width:78px;height:64px;object-fit:cover;border-radius:8px;flex:none}
+.pick-item h3{font-size:14.5px;margin-bottom:4px}
+.pick-item p{font-size:13px;color:var(--muted);margin:0}
+
+/* 最新更新 时间线紧凑列表 */
+.update-list{list-style:none;padding:0;margin:0;border-left:2px solid var(--line);margin-left:4px}
+.update-list li{position:relative;padding:0 0 18px 20px;margin:0}
+.update-list li::before{
+  content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;
+  background:#fff;border:2.5px solid var(--teal);
+}
+.update-list time{font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.3px}
+.update-list b{display:block;font-size:14.5px;margin:2px 0 2px}
+.update-list p{font-size:13.5px;color:var(--ink-soft);margin:0}
+
+/* 分类入口 */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat{
+  padding:13px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;
+  font-size:14px;font-weight:600;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:6px;
+  transition:background .18s,transform .18s,border-color .18s;
+}
+.cat:hover{background:var(--teal-soft);border-color:#b9e0da;transform:translateY(-2px);text-decoration:none}
+.cat span{font-size:12px;color:var(--muted);font-weight:500}
+
+/* 深度解析 */
+.deep{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow)}
+.deep h2{font-size:23px;padding-left:0;margin-bottom:6px}
+.deep h2::before{display:none}
+.deep .byline{font-size:13px;color:var(--muted);margin-bottom:18px}
+.deep h3{font-size:17px;margin:22px 0 8px;color:var(--brand)}
+.deep p{font-size:15.5px;color:#25313d}
+.deep blockquote{
+  margin:18px 0;padding:14px 18px;background:var(--paper);border-left:4px solid var(--accent);
+  border-radius:0 8px 8px 0;font-size:15px;color:var(--ink-soft);
+}
+.deep blockquote cite{display:block;font-size:12.5px;color:var(--muted);font-style:normal;margin-top:6px}
+.judge-table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:14px}
+.judge-table th,.judge-table td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+.judge-table th{background:var(--paper);font-size:13px;color:var(--brand);width:150px}
+.judge-table td b{color:var(--accent)}
+
+/* 体验指南 编号步骤 */
+.steps{list-style:none;padding:0;margin:0;counter-reset:st;display:grid;gap:12px}
+.steps li{
+  counter-increment:st;position:relative;padding:14px 16px 14px 56px;background:#fff;
+  border:1px solid var(--line);border-radius:var(--radius);font-size:14.5px;
+}
+.steps li::before{
+  content:counter(st);position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:26px;height:26px;border-radius:8px;background:var(--brand);color:#fff;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-size:13.5px;
+}
+.steps li b{display:block;font-size:14.5px;margin-bottom:2px}
+.steps li span{color:var(--muted);font-size:13.5px}
+
+/* FAQ */
+.faq details{border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;margin-bottom:10px;overflow:hidden}
+.faq summary{
+  cursor:pointer;padding:14px 16px;font-weight:600;font-size:15px;list-style:none;
+  display:flex;justify-content:space-between;gap:12px;align-items:center;transition:background .18s;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:20px;color:var(--accent);font-weight:400;line-height:1;transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq summary:hover{background:var(--paper)}
+.faq .ans{padding:0 16px 15px;font-size:14px;color:var(--ink-soft)}
+.faq .ans p{margin:0}
+
+/* 评论 */
+.comments{display:grid;gap:12px}
+.cmt{padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);font-size:14px}
+.cmt .who{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cmt .avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:700;flex:none}
+.cmt .who b{font-size:13.5px}
+.cmt .who em{font-style:normal;font-size:12px;color:var(--muted)}
+.cmt p{margin:0;color:var(--ink-soft)}
+.cmt .ref{margin-top:7px;font-size:12.5px;color:var(--muted)}
+.cmt .ref a{font-weight:600}
+
+/* 资讯 */
+.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.news-item{padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);transition:transform .18s,box-shadow .18s}
+.news-item:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+.news-item h3{font-size:14.5px;margin-bottom:5px}
+.news-item p{font-size:13px;color:var(--muted);margin:0}
+.news-item time{font-size:12px;color:var(--teal);font-weight:600}
+
+/* 推荐标签索引 */
+.tags-cloud{display:flex;flex-wrap:wrap;gap:9px}
+.tags-cloud a{
+  display:inline-block;padding:7px 14px;border-radius:22px;background:#fff;border:1px solid var(--line);
+  font-size:13.5px;color:var(--ink-soft);transition:background .18s,color .18s,border-color .18s,transform .18s;
+}
+.tags-cloud a:hover{background:var(--brand);color:#fff;border-color:var(--brand);transform:translateY(-2px);text-decoration:none}
+
+/* 榜单 */
+.rank-list{list-style:none;padding:0;margin:0;counter-reset:rk}
+.rank-list li{
+  counter-increment:rk;display:flex;gap:14px;align-items:flex-start;padding:13px 16px;
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:9px;
+}
+.rank-list li::before{
+  content:counter(rk);font-weight:800;font-size:16px;color:var(--muted);min-width:24px;flex:none;
+  font-variant-numeric:tabular-nums;
+}
+.rank-list li:nth-child(1)::before{color:#d64545}
+.rank-list li:nth-child(2)::before{color:#e8894a}
+.rank-list li:nth-child(3)::before{color:#c9a227}
+.rank-list h3{font-size:14.5px;margin-bottom:3px}
+.rank-list p{font-size:13px;color:var(--muted);margin:0}
+.rank-list .score{margin-left:auto;font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap}
+
+/* 侧栏 */
+.side{position:sticky;top:calc(var(--stick) + 16px);display:grid;gap:16px;min-width:0}
+.side-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 14px;box-shadow:var(--shadow)}
+.side-card h3{font-size:15px;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--line);color:var(--brand)}
+.side-nav{display:grid;gap:2px}
+.side-nav a{
+  display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:13.5px;color:var(--ink-soft);
+  transition:background .18s,color .18s;
+}
+.side-nav a::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--line);flex:none;transition:background .18s}
+.side-nav a:hover{background:var(--paper);color:var(--brand);text-decoration:none}
+.side-nav a.active{background:var(--accent-soft);color:var(--brand);font-weight:600}
+.side-nav a.active::before{background:var(--accent)}
+.side-note{font-size:12.5px;color:var(--muted);line-height:1.7;margin:0}
+.side-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.side-list li{font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0;padding-left:0}
+.side-list a{font-weight:600;font-size:13.5px}
+.side-list time{display:block;font-size:11.5px;color:var(--muted)}
+.side-sign{padding:16px;background:linear-gradient(150deg,#1d3557,#274b78);color:#dce8f5;border-radius:var(--radius)}
+.side-sign h3{color:#fff;border-bottom-color:rgba(255,255,255,.18)}
+.side-sign p{font-size:13px;margin:0 0 10px;color:#c3d5e8}
+.side-sign .btn{width:100%;justify-content:center;font-size:14px;padding:9px 14px}
+
+/* 页尾 */
+.foot{background:#13212f;color:#b8c8d8;margin-top:44px;font-size:13.5px}
+.foot .wrap{padding-top:38px;padding-bottom:26px}
+.foot-top{display:grid;grid-template-columns:1.3fr 2fr;gap:36px;padding-bottom:26px;border-bottom:1px solid rgba(255,255,255,.1)}
+.foot-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:#fff;margin-bottom:10px}
+.foot p.slogan{color:#93a8bc;font-size:13.5px;margin:0 0 12px;max-width:26em}
+.foot-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.foot-groups h4{font-size:13.5px;color:#fff;margin-bottom:9px;letter-spacing:.4px}
+.foot-groups a{display:block;color:#9fb3c6;font-size:13px;padding:3px 0;transition:color .18s}
+.foot-groups a:hover{color:var(--amber);text-decoration:none}
+.foot-bottom{padding-top:18px;font-size:12.5px;color:#7e93a7;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.foot-bottom a{color:#9fb3c6}
+
+/* 回到顶部 */
+.to-top{
+  position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-lift);opacity:0;pointer-events:none;transform:translateY(8px);
+  transition:opacity .25s,transform .25s;z-index:50;
+}
+.to-top.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.to-top:hover{background:var(--brand-2)}
+
+/* 响应式 */
+@media (max-width:1000px){
+  .layout{grid-template-columns:1fr}
+  .side{position:static;grid-template-columns:1fr 1fr;align-items:start}
+  .pick-grid{grid-template-columns:1fr}
+  .cat-grid{grid-template-columns:repeat(3,1fr)}
+  .foot-top{grid-template-columns:1fr;gap:24px}
+}
+@media (max-width:760px){
+  :root{--ann-h:42px;--head-h:58px}
+  .nav{display:none}
+  .menu-btn{display:flex}
+  .search input{width:130px}
+  .search input:focus{width:150px}
+  .mobile-nav{
+    display:none;position:fixed;left:0;right:0;top:var(--stick);z-index:54;
+    background:#fff;border-bottom:1px solid var(--line);box-shadow:var(--shadow-lift);
+    padding:10px 16px 14px;
+  }
+  .mobile-nav.open{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .mobile-nav a{padding:10px 10px;border-radius:8px;font-size:14px;color:var(--ink-soft)}
+  .mobile-nav a:hover{background:var(--paper);text-decoration:none}
+  .overview-grid{grid-template-columns:repeat(2,1fr)}
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  .news-grid{grid-template-columns:1fr}
+  .side{grid-template-columns:1fr}
+  .deep{padding:20px 18px}
+  .hero-stats{gap:18px}
+  .foot-groups{grid-template-columns:1fr 1fr}
+  .announce .ann-text{font-size:12.5px}
+  .to-top{right:12px;bottom:12px;width:40px;height:40px}
+}
+@media (max-width:400px){
+  .overview-grid{grid-template-columns:1fr}
+  .search input{width:100px}
+  .search input:focus{width:124px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+<script type="text/javascript" src="https://cdn.bdwgg.com/mh.js"></script>
+</head>
+<body>
+
+<!-- 公告条 -->
+<div class="announce" role="region" aria-label="站内更新公告">
+  <div class="wrap">
+    <span class="dot" aria-hidden="true"></span>
+    <b>更新</b>
+    <span class="ann-text">11月6日归档新增 3 条推文线索：10月28日转发配文、11月2日回复、11月5日置顶变更 · <a href="/#updates" style="color:#ffe3d2;text-decoration:underline">查看时间线</a></span>
+  </div>
+</div>
+
+<!-- 页头 -->
+<header class="head">
+  <div class="wrap">
+    <a class="brand" href="/#top">
+      <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="14" fill="#1d3557"/>
+        <path d="M18 44V20h9l10 14V20h9v24h-9L27 30v14z" fill="#f4a261"/>
+        <circle cx="49" cy="18" r="5" fill="#2a9d8f"/>
+      </svg>
+      <span>muchitina推特</span>
+    </a>
+    <nav class="nav" aria-label="主题导航">
+      <a href="/#overview">账号概览</a>
+      <a href="/#picks">精选内容</a>
+      <a href="/#updates">最新更新</a>
+      <a href="/#cats">分类入口</a>
+      <a href="/#deep">深度解析</a>
+      <a href="/#guide">体验指南</a>
+      <a href="/#faq">常见问答</a>
+      <a href="/#rank">内容榜</a>
+    </nav>
+    <div class="head-tools">
+      <div class="search" role="search">
+        <svg class="ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#68798b" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+        <input id="q" type="search" placeholder="搜索推文、栏目、条目" aria-label="站内搜索">
+        <div class="search-result" id="qres" aria-live="polite"></div>
+      </div>
+      <a class="btn btn-primary" href="/#updates" style="padding:8px 14px;font-size:13.5px">动态订阅</a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mobileNav" aria-label="打开导航菜单">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15202b" stroke-width="2.2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div class="mobile-nav" id="mobileNav">
+  <a href="/#overview">账号概览</a>
+  <a href="/#picks">精选内容</a>
+  <a href="/#updates">最新更新</a>
+  <a href="/#cats">分类入口</a>
+  <a href="/#deep">深度解析</a>
+  <a href="/#guide">体验指南</a>
+  <a href="/#faq">常见问答</a>
+  <a href="/#comments">用户评论</a>
+  <a href="/#news">相关资讯</a>
+  <a href="/#rec">相关推荐</a>
+  <a href="/#rank">内容榜</a>
+</div>
+
+<!-- 首屏 -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="hero-tag">社交动态档案 · 时间线核对</span>
+      <h1>muchitina推特</h1>
+      <p class="lead">围绕该账号在社交平台上的公开动态，按发布时间、内容类型与互动上下文整理线索。所有条目均标注日期与来源说明，便于逐条核对转发、回复、置顶变更之间的先后关系。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/#updates">看最新更新</a>
+        <a class="btn btn-ghost" href="/#deep">读深度解析</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>68</b>已归档推文线索</div>
+        <div><b>9</b>内容分类频道</div>
+        <div><b>10-09</b>起连续追踪</div>
+        <div><b>3</b>待核说法</div>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 420 320" role="presentation">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f4a261" stop-opacity=".9"/>
+            <stop offset="1" stop-color="#e76f51" stop-opacity=".75"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2a9d8f" stop-opacity=".9"/>
+            <stop offset="1" stop-color="#1d3557" stop-opacity=".2"/>
+          </linearGradient>
+        </defs>
+        <rect x="30" y="26" width="250" height="176" rx="16" fill="#ffffff" opacity=".1"/>
+        <rect x="30" y="26" width="250" height="176" rx="16" fill="none" stroke="#ffffff" stroke-opacity=".3"/>
+        <circle cx="58" cy="56" r="12" fill="url(#g1)"/>
+        <rect x="80" y="48" width="80" height="9" rx="4.5" fill="#ffffff" opacity=".7"/>
+        <rect x="80" y="64" width="52" height="7" rx="3.5" fill="#ffffff" opacity=".38"/>
+        <rect x="48" y="92" width="200" height="8" rx="4" fill="#ffffff" opacity=".5"/>
+        <rect x="48" y="110" width="160" height="8" rx="4" fill="#ffffff" opacity=".32"/>
+        <rect x="48" y="128" width="186" height="8" rx="4" fill="#ffffff" opacity=".32"/>
+        <rect x="48" y="158" width="58" height="22" rx="11" fill="url(#g2)"/>
+        <rect x="116" y="158" width="58" height="22" rx="11" fill="#ffffff" opacity=".16"/>
+        <rect x="184" y="158" width="48" height="22" rx="11" fill="#ffffff" opacity=".16"/>
+        <path d="M300 210 L360 118 L392 168 L330 262 Z" fill="url(#g2)" opacity=".55"/>
+        <circle cx="352" cy="88" r="30" fill="none" stroke="#f4a261" stroke-opacity=".55" stroke-width="2" stroke-dasharray="5 7"/>
+        <circle cx="352" cy="88" r="9" fill="#f4a261"/>
+      </svg>
+      <div class="hero-badge hb1"><b>11月2日回复</b>对象为技术讨论帖，非回应争议</div>
+      <div class="hero-badge hb2"><b>置顶变更记录</b>11月5日 21:40 前后可查</div>
+    </div>
+  </div>
+</section>
+
+<!-- 主内容 -->
+<div class="main wrap" id="main">
+  <div class="layout">
+
+    <div class="content">
+
+      <!-- 概览 -->
+      <section class="sec" id="overview">
+        <div class="sec-head">
+          <h2>账号概览与追踪口径</h2>
+          <span class="sub">统计截至 2026-11-08</span>
+        </div>
+        <div class="overview-grid">
+          <div class="ov-cell">
+            <div class="k">68<small>条</small></div>
+            <h3>已归档推文</h3>
+            <p>覆盖原创、转发、回复三类，转载注明原发布者，回复保留被回复账号。</p>
+          </div>
+          <div class="ov-cell">
+            <div class="k">34<small>天</small></div>
+            <h3>连续追踪区间</h3>
+            <p>2026-10-09 至 2026-11-07，中间无空档，每日至多一条主条目。</p>
+          </div>
+          <div class="ov-cell">
+            <div class="k">7<small>个</small></div>
+            <h3>高频话题</h3>
+            <p>像素画、独立游戏开发日志、旧主机模拟器、同人排版、工具链、展览、读书笔记。</p>
+          </div>
+          <div class="ov-cell">
+            <div class="k">12<small>条</small></div>
+            <h3>互动过百</h3>
+            <p>点赞与转推合计过百的条目，集中在 10 月下旬两张像素场景图发布当天。</p>
+          </div>
+          <div class="ov-cell">
+            <div class="k">2<small>次</small></div>
+            <h3>置顶变动</h3>
+            <p>10月21日置顶作品图，11月5日改为回复汇总帖，两次变动间隔 15 天。</p>
+          </div>
+          <div class="ov-cell">
+            <div class="k">3<small>处</small></div>
+            <h3>信息待核</h3>
+            <p>账号归属、合作列表、转发原图来源三项说法在各平台存在出入。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 精选 -->
+      <section class="sec" id="picks">
+        <div class="sec-head">
+          <h2>精选内容推荐</h2>
+          <a class="more-link" href="/#updates">全部归档</a>
+        </div>
+        <div class="pick-grid">
+          <article class="card pick-hero">
+            <img src="https://picsum.photos/seed/muchitina-pixel-night/720/420" width="720" height="420" loading="lazy" alt="像素画夜景草稿：三层楼体与路灯，标注第 4 版修改">
+            <div class="body">
+              <div class="meta"><span class="tag">像素画</span><time datetime="2026-10-21">10月21日</time></div>
+              <h3>三层楼体夜景草稿：第 4 版的窗户排布改动</h3>
+              <p>10月21日发布的像素夜景把二层窗距从 3 像素拉到 4 像素，理由是灯带高光连成一片导致层次丢失。配文列出三张旧版截图，评论区有人提出地砖纹理应降一档对比度。</p>
+              <a class="more-link" href="/#deep">读这一条的判断拆解 →</a>
+            </div>
+          </article>
+          <div class="pick-list">
+            <article class="card pick-item">
+              <img src="https://picsum.photos/seed/muchitina-devlog/150/120" width="150" height="120" loading="lazy" alt="独立游戏开发日志截图：任务栏与像素素材目录">
+              <div>
+                <h3>开发日志第 12 篇：素材目录按色板重组</h3>
+                <p>10月30日，把 214 个素材按主色分为 6 组，删掉重复帧 31 张。</p>
+              </div>
+            </article>
+            <article class="card pick-item">
+              <img src="https://picsum.photos/seed/muchitina-emulator/150/120" width="150" height="120" loading="lazy" alt="旧主机模拟器界面，含手柄映射设置面板">
+              <div>
+                <h3>模拟器手柄映射：方向键延迟的三种成因</h3>
+                <p>11月3日，回复里补充了 USB 轮询率与垂直同步两项设置。</p>
+              </div>
+            </article>
+            <article class="card pick-item">
+              <img src="https://picsum.photos/seed/muchitina-zine/150/120" width="150" height="120" loading="lazy" alt="同人志排版样张，双栏文字与页边注">
+              <div>
+                <h3>同人志双栏排版：页边注比脚注更好用</h3>
+                <p>10月26日，给出 32 页样张与两种字号对照。</p>
+              </div>
+            </article>
+            <article class="card pick-item">
+              <img src="https://picsum.photos/seed/muchitina-bookshelf/150/120" width="150" height="120" loading="lazy" alt="书架照片，三本设计类书籍并排">
+              <div>
+                <h3>十月读书笔记：《像素艺术手册》批注整理</h3>
+                <p>11月1日，标出第 5 章关于抖动算法的两处说法差异。</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 最新更新 -->
+      <section class="sec" id="updates">
+        <div class="sec-head">
+          <h2>最新更新</h2>
+          <span class="sub">按发布时间倒序，含发布渠道与配图状态</span>
+        </div>
+        <ol class="update-list">
+          <li>
+            <time datetime="2026-11-07">11月7日 · 今天</time>
+            <b>转发一条独立游戏展会排期表</b>
+            <p>转发配文仅一句“11月14日那场在 B2 厅”，未附评价；原帖来自展会官方账号，转推数 27。</p>
+          </li>
+          <li>
+            <time datetime="2026-11-05">11月5日 · 21:40</time>
+            <b>置顶从作品图改为回复汇总帖</b>
+            <p>被置顶的是 10月29日的一条回复，内容关于色板导出格式。评论区有人问为何换置顶，账号未回应。</p>
+          </li>
+          <li>
+            <time datetime="2026-11-03">11月3日</time>
+            <b>模拟器手柄映射回复串更新</b>
+            <p>在同一条帖下追加 4 条回复，讨论 125Hz 与 1000Hz 轮询率对手感的影响，未见实测数据。</p>
+          </li>
+          <li>
+            <time datetime="2026-11-02">11月2日</time>
+            <b>回复技术讨论帖：关于调色板索引上限</b>
+            <p>回复对象为一位做 GBA 风格素材的用户，内容涉及 15 色调色板与索引溢出，措辞偏技术。</p>
+          </li>
+          <li>
+            <time datetime="2026-10-30">10月30日</time>
+            <b>开发日志第 12 篇发布</b>
+            <p>正文 640 字，附 2 张素材目录截图；提到删掉重复帧 31 张，比第 11 篇少 9 张。</p>
+          </li>
+          <li>
+            <time datetime="2026-10-28">10月28日</time>
+            <b>转发像素画教程并附一句补注</b>
+            <p>补注内容为“渐变抖动别超过两层”，原帖作者回复表示同意，该条被转推 41 次。</p>
+          </li>
+          <li>
+            <time datetime="2026-10-26">10月26日</time>
+            <b>同人志排版样张放出</b>
+            <p>32 页 PDF 预览，双栏 9.5pt 与页边注 8pt 两套字号对照，配文说明为投稿前自检用。</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- 分类入口 -->
+      <section class="sec" id="cats">
+        <div class="sec-head">
+          <h2>分类入口</h2>
+          <span class="sub">按内容类型切分，括号内为条目数</span>
+        </div>
+        <div class="cat-grid">
+          <a class="cat" href="/#picks">像素画作品 <span>18</span></a>
+          <a class="cat" href="/#picks">独立游戏开发日志 <span>12</span></a>
+          <a class="cat" href="/#updates">旧主机模拟器 <span>9</span></a>
+          <a class="cat" href="/#picks">同人志排版 <span>7</span></a>
+          <a class="cat" href="/#guide">色板与工具链 <span>8</span></a>
+          <a class="cat" href="/#news">展会与活动 <span>6</span></a>
+          <a class="cat" href="/#picks">读书笔记 <span>5</span></a>
+          <a class="cat" href="/#comments">互动回复存档 <span>3</span></a>
+        </div>
+      </section>
+
+      <!-- 深度解析 -->
+      <section class="sec deep" id="deep">
+        <h2>深度解析：置顶变更与转发节奏放在一起看</h2>
+        <p class="byline">基于 2026-10-09 至 2026-11-07 的 68 条公开动态整理 · 事实、回应、转述、推测分层标注</p>
+
+        <h3>时间线核对：两次置顶各指向什么</h3>
+        <p>10月21日 19:12 的像素夜景帖成为置顶，当天该帖点赞 84、转推 19。11月5日 21:40 前后，置顶换为 10月29日的一条回复。两个时间点相隔 15 天，中间账号发布原创 11 条、转发 6 条、回复 23 条。回复数量在这段时间明显高于原创，但置顶没有选择回复量最高的那条，而是选择了一条技术性回复。</p>
+        <table class="judge-table">
+          <tr><th>可核对项</th><td>10月21日置顶作品图；11月5日置顶回复帖；两次之间原创 11 条、转发 6 条、回复 23 条</td></tr>
+          <tr><th>事实</th><td>置顶内容与时间可查，帖子本身未删除，配文与图片仍在</td></tr>
+          <tr><th>回应</th><td>评论区两次询问换置顶原因，账号均未回复</td></tr>
+          <tr><th>转述</th><td>部分汇总贴称“因合作方要求调整置顶”，未见合作方公告或账号声明</td></tr>
+          <tr><th>推测</th><td>回复帖涉及色板导出格式，与 11月开发日志主题接近，可能为引导新读者看工具链讨论</td></tr>
+        </table>
+
+        <h3>判断一：转发不是扩散，而是标注来源</h3>
+        <p>6 条转发里有 4 条附了补注，补注都在 20 字以内，内容多为限定条件，例如“渐变抖动别超过两层”“11月14日那场在 B2 厅”。这些补注没有评价原帖质量，只补充适用范围。可以反驳的地方在于：补注同样可能被理解为背书，尤其原帖作者回复同意之后，转发就带上了一层互相确认的意味。</p>
+
+        <h3>判断二：开发日志的删减数字比成品图更能说明进度</h3>
+        <p>第 11 篇记录删掉重复帧 40 张，第 12 篇删掉 31 张，素材目录从 7 组压到 6 组，总数 214 个。删减量下降说明重复素材在减少，但这不等于进度加快——第 12 篇同时提到新增待补帧 18 张，净减只有 13 张。用成品图判断进度容易高估，用删减与待补的差值更接近实际工作量。</p>
+
+        <blockquote>
+          “调色板索引到 15 色就够，多出来的位置留给高光。”
+          <cite>—— 11月2日回复原文，对象为 GBA 风格素材作者</cite>
+        </blockquote>
+
+        <h3>判断三：互动高峰集中在图片帖，文字帖几乎不涨</h3>
+        <p>点赞过百的 12 条里，11 条带图，唯一不带图的是 10月28日的转发补注。文字原创平均点赞 23，带图原创平均点赞 76，差 3.3 倍。这个差距在 10月21日之后扩大：10月21日到11月7日的带图帖平均点赞 91，此前的带图帖平均 58。样本只有 68 条，结论适合当观察，不适合当规律。</p>
+      </section>
+
+      <!-- 体验指南 -->
+      <section class="sec" id="guide">
+        <div class="sec-head">
+          <h2>体验指南：按时间线核对一条动态</h2>
+          <span class="sub">适合第一次接触该账号内容的人</span>
+        </div>
+        <ol class="steps">
+          <li><b>先看发布类型</b><span>原创、转发、回复三类混在同一条时间线上，转发要回到原帖确认原发布者，回复要展开上下文。</span></li>
+          <li><b>确认日期与配图</b><span>带图帖占互动大头，图片版本号（如第 4 版）通常写在配文末尾，旧版截图可能在同一帖的回复里。</span></li>
+          <li><b>读补注再读原帖</b><span>20 字以内的补注往往是限定条件，先读补注能避免把适用范围理解得过宽。</span></li>
+          <li><b>把置顶当成入口而非结论</b><span>置顶换过两次，指向的是当前想让人先看的内容，不代表账号立场发生变化。</span></li>
+          <li><b>遇到转述先降级</b><span>没有账号声明或合作方公告的说法，按转述处理，不写进核对表的事实栏。</span></li>
+        </ol>
+      </section>
+
+      <!-- FAQ -->
+      <section class="sec faq" id="faq">
+        <div class="sec-head">
+          <h2>常见问答</h2>
+          <span class="sub">问答结构化数据同步标注</span>
+        </div>
+        <details>
+          <summary>像素画作品的版本号怎么读？</summary>
+          <div class="ans"><p>版本号写在配文末尾，格式为“第 N 版”，N 从 1 起算。10月21日夜景帖标注第 4 版，前三版截图放在同帖回复中。版本号只统计公开修改，不包含未发布的内部调整。</p></div>
+        </details>
+        <details>
+          <summary>开发日志里的素材总数是怎么统计的？</summary>
+          <div class="ans"><p>第 12 篇给出的 214 个指当前目录下的文件数，按主色分 6 组。删掉的重复帧不计入 214，新增待补帧 18 张单独列出。两组数字相加不等于总量，因为待补帧尚未制作。</p></div>
+        </details>
+        <details>
+          <summary>旧主机模拟器的延迟问题有实测吗？</summary>
+          <div class="ans"><p>11月3日的回复串讨论了 125Hz 与 1000Hz 轮询率，但只描述手感差异，没有帧级实测数据。方向键延迟的三种成因属于经验归纳，可作为排查顺序，不能当作测量结论。</p></div>
+        </details>
+        <details>
+          <summary>同人志排版为什么推荐页边注？</summary>
+          <div class="ans"><p>10月26日样张用 32 页双栏 9.5pt 正文配 8pt 页边注，理由是脚注会把读者视线拉到页底再拉回，页边注在视线同一行附近。样张里两套字号对照可直接比较行距密度。</p></div>
+        </details>
+        <details>
+          <summary>转发补注和原帖说法不一致时以哪个为准？</summary>
+          <div class="ans"><p>补注多为限定条件，原帖为完整表述。两者冲突时，先看补注是否写明适用范围，再看原帖作者是否回应。10月28日那条转发中，原帖作者回复同意补注，可视为双方表述兼容。</p></div>
+        </details>
+      </section>
+
+      <!-- 评论 -->
+      <section class="sec" id="comments">
+        <div class="sec-head">
+          <h2>用户评论</h2>
+          <span class="sub">来自公开回复与汇总帖讨论，含中性意见</span>
+        </div>
+        <div class="comments">
+          <article class="cmt">
+            <div class="who"><span class="avatar" style="background:#2a9d8f">林</span><b>林间像素</b><em>10月22日</em></div>
+            <p>二层窗距从 3 像素改到 4 像素之后，灯带确实不糊了，但一层门框显得偏细，后面要不要一起调？</p>
+            <div class="ref">指向：<a href="/#picks">10月21日三层楼体夜景草稿</a></div>
+          </article>
+          <article class="cmt">
+            <div class="who"><span class="avatar" style="background:#e76f51">阿</span><b>阿笔不画图</b><em>10月31日</em></div>
+            <p>开发日志第 12 篇说删了 31 张重复帧，可第 11 篇是 40 张，净减其实不多，别把整理当成进度。</p>
+            <div class="ref">指向：<a href="/#updates">10月30日开发日志第 12 篇</a></div>
+          </article>
+          <article class="cmt">
+            <div class="who"><span class="avatar" style="background:#274b78">模</span><b>模拟器老张</b><em>11月3日</em></div>
+            <p>轮询率那段说得有点玄，125Hz 和 1000Hz 我用同一只手柄试过，差别在斜向移动，不在单键。没数据就别下结论。</p>
+            <div class="ref">指向：<a href="/#updates">11月3日手柄映射回复串</a></div>
+          </article>
+          <article class="cmt">
+            <div class="who"><span class="avatar" style="background:#c9a227">纸</span><b>纸页边注</b><em>10月26日</em></div>
+            <p>页边注比脚注好用这点同意，32 页样张里 8pt 的行距还是挤，印出来可能会糊，建议试 8.5pt。</p>
+            <div class="ref">指向：<a href="/#picks">10月26日同人志排版样张</a></div>
+          </article>
+          <article class="cmt">
+            <div class="who"><span class="avatar" style="background:#68798b">路</span><b>路过的读者</b><em>11月6日</em></div>
+            <p>置顶换成回复帖之后，新读者第一眼看到的是调色板讨论，作品反而不显眼。这个顺序我保留意见。</p>
+            <div class="ref">指向：<a href="/#deep">11月5日置顶变更</a></div>
+          </article>
+          <article class="cmt">
+            <div class="who"><span class="avatar" style="background:#2a9d8f">D</span><b>Dot_15</b><em>11月2日</em></div>
+            <p>15 色调色板留高光位的说法，在 GBA 风格素材上成立，但换成 32 色索引就得重排，不能照搬。</p>
+            <div class="ref">指向：<a href="/#updates">11月2日调色板索引回复</a></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 相关资讯 -->
+      <section class="sec" id="news">
+        <div class="sec-head">
+          <h2>相关资讯</h2>
+          <span class="sub">外部活动与工具版本信息</span>
+        </div>
+        <div class="news-grid">
+          <article class="news-item">
+            <time datetime="2026-11-07">11月7日</time>
+            <h3>独立游戏展 11月14日排期发布，B2 厅为像素类作品区</h3>
+            <p>展会官方账号放出展位图，B2 厅列 14 个像素风格作品，其中 3 个标注“开发中”。</p>
+          </article>
+          <article class="news-item">
+            <time datetime="2026-11-04">11月4日</time>
+            <h3>像素编辑工具 3.7 版发布，调色板导出新增 ASE 格式</h3>
+            <p>更新说明提到索引上限仍为 256，ASE 导出保留分组名，与 11月2日回复讨论的导出格式直接相关。</p>
+          </article>
+          <article class="news-item">
+            <time datetime="2026-10-29">10月29日</time>
+            <h3>同人志投稿截止日顺延至 11月20日</h3>
+            <p>主办方公告称排版模板不变，32 页以上需提前登记，10月26日样张正按该模板制作。</p>
+          </article>
+          <article class="news-item">
+            <time datetime="2026-10-24">10月24日</time>
+            <h3>旧主机模拟器前端更新，手柄映射面板改为双列</h3>
+            <p>改动影响 11月3日回复里提到的设置路径，旧版截图中的菜单位置已不能直接对应。</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 相关推荐 -->
+      <section class="sec" id="rec">
+        <div class="sec-head">
+          <h2>相关推荐</h2>
+          <span class="sub">按内容关联度排列，可直接跳转对应板块</span>
+        </div>
+        <div class="tags-cloud">
+          <a href="/#picks">像素画夜景三层楼体</a>
+          <a href="/#updates">开发日志素材目录重组</a>
+          <a href="/#deep">置顶变更时间线核对</a>
+          <a href="/#updates">GBA 风格 15 色调色板</a>
+          <a href="/#updates">模拟器手柄轮询率</a>
+          <a href="/#picks">同人志页边注排版</a>
+          <a href="/#news">独立游戏展 B2 厅</a>
+          <a href="/#news">像素编辑工具 ASE 导出</a>
+          <a href="/#picks">十月读书笔记批注</a>
+          <a href="/#guide">转发补注阅读顺序</a>
+          <a href="/#comments">读者对置顶的意见</a>
+          <a href="/#rank">互动过百条目榜</a>
+        </div>
+      </section>
+
+      <!-- 榜单 -->
+      <section class="sec" id="rank">
+        <div class="sec-head">
+          <h2>互动榜：点赞与转推合计前十</h2>
+          <span class="sub">统计区间 2026-10-09 至 2026-11-07</span>
+        </div>
+        <ol class="rank-list">
+          <li><div><h3>三层楼体夜景草稿 第 4 版</h3><p>10月21日 · 带图 · 点赞 84 / 转推 19</p></div><span class="score">103</span></li>
+          <li><div><h3>像素画教程转发补注“渐变抖动别超过两层”</h3><p>10月28日 · 转发 · 点赞 62 / 转推 41</p></div><span class="score">103</span></li>
+          <li><div><h3>开发日志第 12 篇素材目录重组</h3><p>10月30日 · 带图 · 点赞 71 / 转推 12</p></div><span class="score">83</span></li>
+          <li><div><h3>同人志双栏样张 32 页</h3><p>10月26日 · 带图 · 点赞 58 / 转推 17</p></div><span class="score">75</span></li>
+          <li><div><h3>模拟器手柄映射回复串</h3><p>11月3日 · 回复 · 点赞 44 / 转推 8</p></div><span class="score">52</span></li>
+          <li><div><h3>十月读书笔记批注整理</h3><p>11月1日 · 带图 · 点赞 39 / 转推 6</p></div><span class="score">45</span></li>
+          <li><div><h3>调色板索引 15 色回复</h3><p>11月2日 · 回复 · 点赞 33 / 转推 5</p></div><span class="score">38</span></li>
+          <li><div><h3>展会排期转发“11月14日那场在 B2 厅”</h3><p>11月7日 · 转发 · 点赞 27 / 转推 3</p></div><span class="score">30</span></li>
+          <li><div><h3>置顶回复汇总帖变更</h3><p>11月5日 · 回复 · 点赞 22 / 转推 4</p></div><span class="score">26</span></li>
+          <li><div><h3>双层楼体白天版旧稿</h3><p>10月17日 · 带图 · 点赞 19 / 转推 2</p></div><span class="score">21</span></li>
+        </ol>
+      </section>
+
+    </div><!-- /content -->
+
+    <!-- 侧栏 -->
+    <aside class="side" aria-label="侧栏导航与补充信息">
+      <div class="side-card">
+        <h3>页内导航</h3>
+        <nav class="side-nav" id="sideNav">
+          <a href="/#overview">账号概览</a>
+          <a href="/#picks">精选内容</a>
+          <a href="/#updates">最新更新</a>
+          <a href="/#cats">分类入口</a>
+          <a href="/#deep">深度解析</a>
+          <a href="/#guide">体验指南</a>
+          <a href="/#faq">常见问答</a>
+          <a href="/#comments">用户评论</a>
+          <a href="/#news">相关资讯</a>
+          <a href="/#rec">相关推荐</a>
+          <a href="/#rank">互动榜</a>
+        </nav>
+      </div>
+      <div class="side-card">
+        <h3>近三日更新</h3>
+        <ul class="side-list">
+          <li><a href="/#updates">展会排期转发</a><time datetime="2026-11-07">11月7日 · B2 厅补注</time></li>
+          <li><a href="/#deep">置顶改为回复帖</a><time datetime="2026-11-05">11月5日 · 21:40</time></li>
+          <li><a href="/#updates">手柄映射追加 4 条</a><time datetime="2026-11-03">11月3日 · 轮询率</time></li>
+        </ul>
+      </div>
+      <div class="side-card">
+        <h3>待核事项</h3>
+        <p class="side-note">① 账号归属：多个汇总帖说法不一，未见本人声明。② 合作方列表：仅一处转述提及，无公告。③ 转发原图来源：10月28日原帖已标注，转述中常被略去。</p>
+      </div>
+      <div class="side-sign">
+        <h3>订阅动态提醒</h3>
+        <p>新条目发布后 24 小时内整理进时间线，含发布类型、配图状态与补注原文。</p>
+        <a class="btn btn-primary" href="/#updates">查看时间线</a>
+      </div>
+      <div class="side-card">
+        <h3>站内入口</h3>
+        <nav class="side-nav">
+          <a href="/#picks">像素画频道</a>
+          <a href="/#picks">开发日志频道</a>
+          <a href="/#guide">工具链说明</a>
+          <a href="/#rank">互动榜</a>
+        </nav>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- 页尾 -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <div class="foot-brand">
+          <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
+            <rect width="64" height="64" rx="14" fill="#274b78"/>
+            <path d="M18 44V20h9l10 14V20h9v24h-9L27 30v14z" fill="#f4a261"/>
+          </svg>
+          muchitina推特
+        </div>
+        <p class="slogan">把每条公开动态放回发布顺序里，标注类型、时间与上下文，让转发、回复和置顶变更各自有据可查。</p>
+        <p class="slogan" style="font-size:12.5px">示例数据说明：条目数量、点赞与转推数字为整理示例，用于展示核对方法，不代表实时平台数据。</p>
+      </div>
+      <div class="foot-groups">
+        <div>
+          <h4>内容频道</h4>
+          <a href="/#picks">像素画作品</a>
+          <a href="/#picks">独立游戏开发日志</a>
+          <a href="/#updates">旧主机模拟器</a>
+          <a href="/#picks">同人志排版</a>
+        </div>
+        <div>
+          <h4>阅读与核对</h4>
+          <a href="/#overview">追踪口径</a>
+          <a href="/#deep">深度解析</a>
+          <a href="/#guide">体验指南</a>
+          <a href="/#faq">常见问答</a>
+        </div>
+        <div>
+          <h4>互动与参考</h4>
+          <a href="/#comments">用户评论</a>
+          <a href="/#news">相关资讯</a>
+          <a href="/#rec">相关推荐</a>
+          <a href="/#rank">互动榜</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 内容整理示例 · 页面更新时间 2026-11-08，对应 11月7日展会转发、11月5日置顶变更与 11月3日回复串三项更新。</span>
+      <span><a href="/#top">回到页首</a> · <a href="/#overview">统计口径</a></span>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" aria-label="回到顶部">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+(function(){
+  "use strict";
+
+  /* 搜索：本地索引，无结果反馈 */
+  var input = document.getElementById('q');
+  var box = document.getElementById('qres');
+  var index = [
+    {t:'账号概览与追踪口径',h:'/#overview'},
+    {t:'精选内容推荐',h:'/#picks'},
+    {t:'三层楼体夜景草稿 第4版',h:'/#picks'},
+    {t:'开发日志第12篇 素材目录重组',h:'/#updates'},
+    {t:'模拟器手柄映射 轮询率',h:'/#updates'},
+    {t:'同人志双栏排版 页边注',h:'/#picks'},
+    {t:'GBA 风格 15 色调色板',h:'/#updates'},
+    {t:'转发补注 渐变抖动别超过两层',h:'/#updates'},
+    {t:'最新更新 时间线',h:'/#updates'},
+    {t:'分类入口 频道',h:'/#cats'},
+    {t:'深度解析 置顶变更',h:'/#deep'},
+    {t:'体验指南 阅读顺序',h:'/#guide'},
+    {t:'常见问答 FAQ',h:'/#faq'},
+    {t:'用户评论 读者意见',h:'/#comments'},
+    {t:'相关资讯 展会 B2 厅',h:'/#news'},
+    {t:'像素编辑工具 ASE 导出',h:'/#news'},
+    {t:'相关推荐 标签',h:'/#rec'},
+    {t:'互动榜 点赞转推',h:'/#rank'},
+    {t:'十月读书笔记 批注',h:'/#picks'},
+    {t:'待核事项 账号归属',h:'/#overview'}
+  ];
+  function render(){
+    var v = input.value.trim().toLowerCase();
+    if(!v){ box.classList.remove('on'); box.innerHTML=''; return; }
+    var hits = index.filter(function(it){ return it.t.toLowerCase().indexOf(v) > -1; }).slice(0,6);
+    box.innerHTML = '';
+    if(hits.length === 0){
+      var e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = '没有找到与“' + input.value.trim() + '”匹配的条目，试试“像素画”“置顶”“模拟器”。';
+      box.appendChild(e);
+    } else {
+      hits.forEach(function(it){
+        var a = document.createElement('a');
+        a.href = it.h;
+        a.textContent = it.t;
+        box.appendChild(a);
+      });
+    }
+    box.classList.add('on');
+  }
+  input.addEventListener('input', render);
+  input.addEventListener('keydown', function(ev){
+    if(ev.key === 'Escape'){ input.value=''; box.classList.remove('on'); input.blur(); }
+  });
+  document.addEventListener('click', function(ev){
+    if(!ev.target.closest('.search')) box.classList.remove('on');
+  });
+
+  /* 移动端菜单 */
+  var btn = document.getElementById('menuBtn');
+  var mnav = document.getElementById('mobileNav');
+  btn.addEventListener('click', function(){
+    var open = mnav.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? '关闭导航菜单' : '打开导航菜单');
+  });
+  mnav.addEventListener('click', function(ev){
+    if(ev.target.tagName === 'A' && window.matchMedia('(max-width:760px)').matches){
+      mnav.classList.remove('open');
+      btn.setAttribute('aria-expanded','false');
+    }
+  });
+
+  /* 回到顶部 */
+  var topBtn = document.getElementById('toTop');
+  function onScroll(){
+    if(window.scrollY > 600){ topBtn.classList.add('show'); }
+    else { topBtn.classList.remove('show'); }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+  topBtn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  /* 侧栏导航滚动高亮 */
+  var sideLinks = Array.prototype.slice.call(document.querySelectorAll('#sideNav a'));
+  var targets = sideLinks.map(function(a){
+    return document.querySelector(a.getAttribute('href').replace('/#','#'));
+  });
+  function highlight(){
+    var pos = window.scrollY + 130, current = -1;
+    targets.forEach(function(el, i){
+      if(el && el.offsetTop <= pos) current = i;
+    });
+    sideLinks.forEach(function(a, i){
+      a.classList.toggle('active', i === current);
+    });
+  }
+  window.addEventListener('scroll', highlight, {passive:true});
+  highlight();
+})();
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "muchitina推特",
+  "inLanguage": "zh-CN",
+  "description": "围绕该账号社交动态整理的内容档案页，收录推文更新节点、发布内容分类与互动观察。"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "像素画作品的版本号怎么读？",
+      "acceptedAnswer": {"@type": "Answer", "text": "版本号写在配文末尾，格式为第 N 版，N 从 1 起算。10月21日夜景帖标注第 4 版，前三版截图放在同帖回复中。"}
+    },
+    {
+      "@type": "Question",
+      "name": "开发日志里的素材总数是怎么统计的？",
+      "acceptedAnswer": {"@type": "Answer", "text": "第 12 篇给出的 214 个指当前目录下的文件数，按主色分 6 组。删掉的重复帧不计入 214，新增待补帧 18 张单独列出。"}
+    },
+    {
+      "@type": "Question",
+      "name": "旧主机模拟器的延迟问题有实测吗？",
+      "acceptedAnswer": {"@type": "Answer", "text": "11月3日的回复串讨论了 125Hz 与 1000Hz 轮询率，但只描述手感差异，没有帧级实测数据，方向键延迟的三种成因属于经验归纳。"}
+    },
+    {
+      "@type": "Question",
+      "name": "同人志排版为什么推荐页边注？",
+      "acceptedAnswer": {"@type": "Answer", "text": "10月26日样张用 32 页双栏 9.5pt 正文配 8pt 页边注，理由是脚注会把读者视线拉到页底再拉回，页边注在视线同一行附近。"}
+    },
+    {
+      "@type": "Question",
+      "name": "转发补注和原帖说法不一致时以哪个为准？",
+      "acceptedAnswer": {"@type": "Answer", "text": "补注多为限定条件，原帖为完整表述。两者冲突时先看补注是否写明适用范围，再看原帖作者是否回应。10月28日那条转发中原帖作者回复同意补注。"}
+    }
+  ]
+}
+</script>
+</body>
+            </html>
